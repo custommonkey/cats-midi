@@ -19,7 +19,7 @@ object Messages {
 
   implicit val messagesMonoid: CommutativeMonoid[Messages] =
     new CommutativeMonoid[Messages] {
-      override val empty: Messages = SortedSet()
+      override val empty: Messages                             = SortedSet()
       override def combine(x: Messages, y: Messages): Messages = x ++ y
     }
 
