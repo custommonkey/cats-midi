@@ -4,7 +4,6 @@
   */
 package cats.midi
 
-import cats.midi.Macro.Macro
 import cats.midi.Messages._
 import cats.midi.ShortMessages._
 import cats.midi.types.uByte

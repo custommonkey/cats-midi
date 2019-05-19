@@ -13,7 +13,7 @@ import scala.collection.immutable.SortedSet
 
 object Messages {
 
-  type Messages = SortedSet[Event[MidiMessage]]
+  type Messages = SortedSet[Event[MidiMessage]] //TODO: Should this be parametric
 
   def apply(m: Event[MidiMessage]*): Messages = SortedSet(m: _*)
 

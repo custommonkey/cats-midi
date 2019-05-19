@@ -1,12 +1,8 @@
 package cats.midi
 
 import cats.midi.Messages.Messages
+import simulacrum._
 
-object Macro {
-
-  trait Macro[A] extends (A => Messages)
-
-  implicit class BrapOps[A](a: A) {
-    def messages(implicit brap: Macro[A]): Messages = brap(a)
-  }
+@typeclass trait Macro[A] {
+  @op("messages") def messages(a: A): Messages
 }
