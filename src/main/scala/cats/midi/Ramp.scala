@@ -1,7 +1,3 @@
-/**
-  * Copyright Homeaway, Inc 2016-Present. All Rights Reserved.
-  * No unauthorized use of this software.
-  */
 package cats.midi
 
 import cats.midi.Messages._
