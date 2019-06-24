@@ -5,54 +5,58 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 
 import cats.midi.Points.ops._
 import cats.midi.ShortMessages._
-import cats.midi.Things.arbRamp
+import cats.midi.Things._
 import com.cibo.evilplot._
+import com.cibo.evilplot.numeric.Point
 import com.cibo.evilplot.plot._
 import com.cibo.evilplot.plot.aesthetics.DefaultTheme._
 import eu.timepit.refined.auto._
-import javax.imageio.ImageIO
 import org.scalacheck.{Arbitrary, Gen, ScalacheckShapeless}
 import org.scalatest.prop.PropertyChecks
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.{MustMatchers, PropSpec}
+import cats.implicits._
+import cats.midi.Messages._
 
-import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.duration.FiniteDuration
 
-class RampSpec extends WordSpec with MustMatchers with PropertyChecks with ScalacheckShapeless {
+class RampSpec extends PropSpec with MustMatchers with PropertyChecks with ScalacheckShapeless {
 
   implicit val arbDuration: Arbitrary[FiniteDuration] =
     Arbitrary(Gen.choose[Long](100, 10000).map(FiniteDuration(_, MILLISECONDS)))
 
-  "Ramp" should {
-    "generate a ramp of events" in {
-
-      check(Ramp(0, 1, 10.seconds))
-
-      forAll { ramp: Ramp =>
-        check(ramp)
-      }
-    }
-
-    def check(ramp: Ramp) = {
-      val messages = ramp.messages
-      messages.head must be(Event(cc(ramp.start), 0))
-      messages must have size (ramp.end.value - ramp.start.value + 1).toLong
-      messages.last must be(Event(cc(ramp.end), ramp.duration.toMillis))
+  property("start with first event") {
+    forAll { ramp: Ramp =>
+      ramp.messages.head must be(Event(cc(ramp.range.start), 0))
     }
   }
 
-  val xxx = Arbitrary.arbitrary[Ramp].sample.get
+  property("end with last event") {
+    forAll { ramp: Ramp =>
+      ramp.messages.last must be(Event(cc(ramp.range.end), ramp.duration.toMillis))
+    }
+  }
 
-  val data = xxx.points
+  property("have correct size") {
+    forAll { ramp: Ramp =>
+      ramp.messages must have size (ramp.range.end.value - ramp.range.start.value + 1).toLong
+    }
+  }
 
-  val img = ScatterPlot(data)
-    .xAxis()
-    .yAxis()
-    .frame()
-    .xLabel("x")
-    .yLabel("y")
-    .render()
-    .asBufferedImage
+  plot({
+    for {
+      a <- Arbitrary.arbitrary[Ramp]
+      b <- Arbitrary.arbitrary[Ramp]
+    } yield a.messages |+| b.messages
+  }.sample.get.points)
 
-  ImageIO.write(img, "png", new File("out.png"))
+  def plot(points: Seq[Point]) =
+    ScatterPlot(points)
+      .xAxis()
+      .yAxis()
+      .frame()
+      .xLabel("x")
+      .yLabel("y")
+      .render()
+      .write(new File("out.png"))
 
 }

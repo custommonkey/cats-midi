@@ -1,30 +1,37 @@
 package cats.midi
 
-import cats.kernel.CommutativeMonoid
-import cats.midi.ShortMessages._
-import cats.{Eq, Show}
-import javax.sound.midi.{MidiMessage, ShortMessage}
+import cats.kernel.{CommutativeMonoid, Monoid}
 
 import scala.collection.immutable.SortedSet
+import simulacrum.typeclass
+import simulacrum.op
 
 object Messages {
 
-  type Messages = SortedSet[Event[MidiMessage]] //TODO: Should this be parametric
+  type Messages = SortedSet[Event]
 
-  def apply(m: Event[MidiMessage]*): Messages = SortedSet(m: _*)
+  def apply(m: Event*): Messages = SortedSet(m: _*)
 
-  implicit val messagesMonoid: CommutativeMonoid[Messages] =
+  implicit val messagesMonoid: Monoid[Messages] =
+    new Monoid[Messages] {
+      override val empty: Messages = SortedSet()
+      override def combine(x: Messages, y: Messages): Messages = {
+        val xxx = x.last.timestamp
+        x ++ y.map(_ + xxx)
+      }
+    }
+
+  implicit val messagesCommutativeMonoid: CommutativeMonoid[Messages] =
     new CommutativeMonoid[Messages] {
       override val empty: Messages                             = SortedSet()
       override def combine(x: Messages, y: Messages): Messages = x ++ y
     }
 
-  implicit val eqMidiMessage: Eq[MidiMessage] = {
-    case (a: ShortMessage, b: ShortMessage) => Eq[ShortMessage].eqv(a, b)
-    case _                                  => false
+  implicit val shift: Shift[Messages] = new Shift[Messages] {
+    def shift(a: Messages): Messages = ???
   }
+}
 
-  implicit val showMidiMessage: Show[MidiMessage] = {
-    case m: ShortMessage => Show[ShortMessage].show(m)
-  }
+@typeclass trait Shift[A] {
+  @op("!!") def shift(a: A): A
 }

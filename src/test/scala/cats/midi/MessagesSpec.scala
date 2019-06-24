@@ -1,7 +1,8 @@
 package cats.midi
 
+import cats.Monoid
 import cats.kernel.Eq
-import cats.kernel.laws.discipline.CommutativeMonoidTests
+import cats.kernel.laws.discipline.{CommutativeMonoidTests, MonoidTests}
 import cats.midi.Messages._
 import cats.midi.ShortMessages._
 import cats.midi.Things._
@@ -12,9 +13,26 @@ import scala.collection.immutable.SortedSet
 
 final class MessagesSpec extends CatsSuite {
 
-  implicit def equality[A]: Eq[SortedSet[Event[A]]] = Eq.fromUniversalEquals
+  implicit def equality[A]: Eq[SortedSet[Event]] = Eq.fromUniversalEquals
 
-  checkAll("Messages.CommutativeMonoidLaws", CommutativeMonoidTests[Messages].semigroup)
+  checkAll("Messages.MonoidLaws", MonoidTests[Messages].monoid)
+  checkAll("Messages.CommunativeMonoidLats", CommutativeMonoidTests[Messages].commutativeMonoid)
+
+  test("...") {
+
+    implicit class Stuff[A](a: A) {
+      def ~(b: A)(implicit m: Monoid[A]): A = m.combine(a, b) // Think this should shift
+    }
+
+    ((Event(noteOn(0), 1) ++ Event(noteOff(0), 2)) ~ (Event(noteOn(0), 1) ++ Event(noteOff(0), 2))) should be {
+      Messages(
+        Event(noteOn(0), 1),
+        Event(noteOff(0), 2),
+        Event(noteOn(1), 3),
+        Event(noteOff(1), 4)
+      )
+    }
+  }
 //  checkAll("Messages.Eq", EqTests[Messages].eqv)
 
   test("Grid to messages") {

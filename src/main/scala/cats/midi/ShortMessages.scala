@@ -1,7 +1,7 @@
 package cats.midi
 
 import cats.midi.types.uByte
-import cats.{Eq, Show}
+import cats.Eq
 import eu.timepit.refined.auto._
 import javax.sound.midi.ShortMessage
 import javax.sound.midi.ShortMessage._
@@ -22,13 +22,4 @@ object ShortMessages {
       (a.getData1 === b.getData1) &
       (a.getData2 === b.getData2)
 
-  private val status: Int => String = {
-    case NOTE_ON        => "NOTE_ON"
-    case NOTE_OFF       => "NOTE_OFF"
-    case CONTROL_CHANGE => "CONTROL_CHANGE"
-    case s              => s.toString
-  }
-
-  implicit val showShortMessage: Show[ShortMessage] = m =>
-    s"ShortMessage(${status(m.getStatus)}, ${m.getData1}, ${m.getData2})"
 }
